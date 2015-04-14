@@ -1,0 +1,65 @@
+- name: Create the group for the app users
+  group: name={{ item.app_name }}
+  with_items: tomcat_apps
+  tags: tomcat
+
+- name: Create the users for the app files
+  user: name={{ item.app_name }} group={{ item.app_name }} uid={{ item.user_id }} home=/opt/{{ item.app_name }} createhome=no
+  with_items: tomcat_apps
+  tags: tomcat
+  
+- name: Create the directories for the app files
+  file: path=/opt/{{ item.app_name }}/ state=directory owner={{ item.app_name }} group={{ item.app_name }} mode=0755
+  with_items: tomcat_apps
+  tags: tomcat
+  
+- name: Download Tomcat
+  get_url: url=http://archive.apache.org/dist/tomcat/tomcat-7/v{{ tomcat_version }}/bin/apache-tomcat-{{ tomcat_version }}.tar.gz dest=/opt/
+  tags: tomcat
+  
+- name: Extract Tomcat folder
+  unarchive: src=/opt/apache-tomcat-{{ tomcat_version }}.tar.gz dest=/opt/ copy=no
+  with_items: tomcat_apps
+  tags: tomcat
+   
+- name: Copy Tomcat folder for every app
+  shell: cp -R /opt/apache-tomcat-{{ tomcat_version }}/* /opt/{{ item.app_name }}/ creates=/opt/{{ item.app_name }}/bin
+  with_items: tomcat_apps
+  register: copied_folders
+  tags: tomcat
+  
+- name: Change ownership of Tomcat app folder
+  file: path=/opt/{{ item.0.app_name }}/ state=directory owner={{ item.0.app_name }} group={{ item.0.app_name }} recurse=yes
+  with_together: 
+    - tomcat_apps
+    - copied_folders.results
+  when: item.1.changed
+  tags: tomcat
+  
+- name: Configure Tomcat server
+  template: src=server.j2 dest=/opt/{{ item.app_name }}/conf/server.xml
+  with_items: tomcat_apps
+  notify: restart tomcat_apps
+  tags: tomcat
+  
+- name: Configure Tomcat users
+  template: src=tomcat-users.j2 dest=/opt/{{ item.app_name }}/conf/tomcat-users.xml
+  with_items: tomcat_apps
+  notify: restart tomcat_apps
+  tags: tomcat
+  
+- name: Install Tomcat init script
+  template: src=init_file.j2 dest=/etc/init.d/{{ item.app_name }} mode=0755
+  with_items: tomcat_apps
+  tags: tomcat
+  
+- name: Configure Java memory usage
+  template: src=setenv.sh.j2 dest=/opt/{{ item.app_name }}/bin/setenv.sh mode=0755
+  with_items: tomcat_apps
+  notify: restart tomcat_apps
+  tags: tomcat
+ 
+- name: Enable Tomcat apps
+  service: name={{ item.app_name }} started=yes enabled=yes
+  with_items: tomcat_apps
+  tags: tomcat
