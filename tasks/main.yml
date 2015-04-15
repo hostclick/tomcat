@@ -17,6 +17,10 @@
   get_url: url=http://archive.apache.org/dist/tomcat/tomcat-7/v{{ tomcat_version }}/bin/apache-tomcat-{{ tomcat_version }}.tar.gz dest=/opt/
   tags: tomcat
   
+- name: Ensure tar is installed (required by unarchive)
+  yum: name=tar state=installed
+  tags: tomcat
+
 - name: Extract Tomcat folder
   unarchive: src=/opt/apache-tomcat-{{ tomcat_version }}.tar.gz dest=/opt/ copy=no
   with_items: tomcat_apps
