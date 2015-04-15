@@ -1,5 +1,5 @@
 ---
 - name: restart tomcat_apps
-  shell: /etc/init.d/{{ item.app_name }} restart
-  ignore_errors: yes
+  service: name={{ item.app_name }} started=yes enabled=yes
   with_items: tomcat_apps
+  when: tomcat_daemon is not defined or tomcat_daemon|bool == true

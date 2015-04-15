@@ -51,6 +51,7 @@
 - name: Install Tomcat init script
   template: src=init_file.j2 dest=/etc/init.d/{{ item.app_name }} mode=0755
   with_items: tomcat_apps
+  when: tomcat_daemon is not defined or tomcat_daemon|bool == true
   tags: tomcat
   
 - name: Configure Java memory usage
@@ -59,7 +60,8 @@
   notify: restart tomcat_apps
   tags: tomcat
  
-- name: Enable Tomcat apps
+- name: Enable and start Tomcat apps
   service: name={{ item.app_name }} started=yes enabled=yes
   with_items: tomcat_apps
+  when: tomcat_daemon is not defined or tomcat_daemon|bool == true
   tags: tomcat
