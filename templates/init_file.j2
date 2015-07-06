@@ -10,10 +10,10 @@
 ### END INIT INFO
  
 #Location of JAVA_HOME (bin files)
-if [ "z$JAVA_HOME" != "z" ]
-then
+if [ -n "$JAVA_HOME" ]; then
     export JAVA_HOME=/usr/java/latest
 fi
+
 #Add Java binary files to PATH
 export PATH=$JAVA_HOME/bin:$PATH
  
