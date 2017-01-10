@@ -38,7 +38,7 @@
     - '{{ tomcat_apps }}'
     - '{{ copied_folders.results }}'
   when: item.1.changed
-  tags: 
+  tags:
     - tomcat
     - skip_ansible_lint
 
