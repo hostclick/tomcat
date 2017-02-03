@@ -38,7 +38,9 @@
     - '{{ tomcat_apps }}'
     - '{{ copied_folders.results }}'
   when: item.1.changed
-  tags: tomcat
+  tags:
+    - tomcat
+    - skip_ansible_lint
 
 - name: Configure Tomcat server
   template: src=server.j2 dest=/opt/{{ item.app_name }}/conf/server.xml
